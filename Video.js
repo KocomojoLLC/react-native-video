@@ -75,6 +75,7 @@ class Video extends Component {
     }
 
     const isNetwork = !!(uri && uri.match(/^https?:/));
+    const isFile = !!(uri && uri.match(/^file:/));
     const isAsset = !!(uri && uri.match(/^(assets-library|file):/));
 
     let nativeResizeMode;
@@ -94,7 +95,7 @@ class Video extends Component {
       resizeMode: nativeResizeMode,
       src: {
         uri: uri,
-        isNetwork,
+        isNetwork: isNetwork || isFile,
         isAsset,
         type: source.type || 'mp4',
       },
