@@ -119,6 +119,8 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
         initializeMediaPlayerIfNeeded();
         mMediaPlayer.reset();
 
+        if (uriString == null) return;
+
         try {
             if (isNetwork) {
                 setDataSource(uriString);
