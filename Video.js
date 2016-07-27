@@ -13,8 +13,6 @@ const {
 
 const VideoResizeMode = require('./VideoResizeMode');
 
-const VideoResizeMode = require('./VideoResizeMode');
-
 const styles = StyleSheet.create({
   base: {
     overflow: 'hidden',
