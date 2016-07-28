@@ -68,7 +68,6 @@ class Video extends Component {
     const {
       style,
       source,
-      ref,
       resizeMode,
     } = this.props;
 
