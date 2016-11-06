@@ -75,36 +75,34 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
         mThemedReactContext = themedReactContext;
         mEventEmitter = themedReactContext.getJSModule(RCTEventEmitter.class);
 
-        initializeMediaPlayerIfNeeded();
         setSurfaceTextureListener(this);
 
         mProgressUpdateRunnable = new Runnable() {
             @Override
             public void run() {
 
-                if (mMediaPlayerValid) {
+                if (mMediaPlayerValid && mMediaPlayer != null) {
                     WritableMap event = Arguments.createMap();
                     event.putDouble(EVENT_PROP_CURRENT_TIME, mMediaPlayer.getCurrentPosition() / 1000.0);
                     event.putDouble(EVENT_PROP_PLAYABLE_DURATION, mVideoBufferedDuration / 1000.0); //TODO:mBufferUpdateRunnable
                     mEventEmitter.receiveEvent(getId(), Events.EVENT_PROGRESS.toString(), event);
                 }
+
                 mProgressUpdateHandler.postDelayed(mProgressUpdateRunnable, 250);
             }
         };
         mProgressUpdateHandler.post(mProgressUpdateRunnable);
     }
 
-    private void initializeMediaPlayerIfNeeded() {
-        if (mMediaPlayer == null) {
-            mMediaPlayerValid = false;
-            mMediaPlayer = new MediaPlayer();
-            mMediaPlayer.setScreenOnWhilePlaying(true);
-            mMediaPlayer.setOnVideoSizeChangedListener(this);
-            mMediaPlayer.setOnErrorListener(this);
-            mMediaPlayer.setOnPreparedListener(this);
-            mMediaPlayer.setOnBufferingUpdateListener(this);
-            mMediaPlayer.setOnCompletionListener(this);
-        }
+    private void initializeMediaPlayer() {
+        mMediaPlayerValid = false;
+        mMediaPlayer = new MediaPlayer();
+        mMediaPlayer.setScreenOnWhilePlaying(true);
+        mMediaPlayer.setOnVideoSizeChangedListener(this);
+        mMediaPlayer.setOnErrorListener(this);
+        mMediaPlayer.setOnPreparedListener(this);
+        mMediaPlayer.setOnBufferingUpdateListener(this);
+        mMediaPlayer.setOnCompletionListener(this);
     }
 
     public void setSrc(final String uriString, final String type, final boolean isNetwork) {
@@ -116,14 +114,15 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
         mVideoDuration = 0;
         mVideoBufferedDuration = 0;
 
-        initializeMediaPlayerIfNeeded();
-        mMediaPlayer.reset();
+        initializeMediaPlayer();
 
         if (uriString == null) return;
 
         try {
             if (isNetwork) {
-                setDataSource(uriString);
+                // this will call reset and reset is very slow
+                // setDataSource(uriString);
+                mMediaPlayer.setDataSource(uriString);
             } else {
                 setRawData(mThemedReactContext.getResources().getIdentifier(
                         uriString,
@@ -145,9 +144,9 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
         mEventEmitter.receiveEvent(getId(), Events.EVENT_LOAD_START.toString(), event);
 
         try {
-          prepareAsync(this);
+            prepareAsync(this);
         } catch (java.lang.IllegalStateException e) {
-          e.printStackTrace();
+            e.printStackTrace();
           return;
         }
     }
@@ -216,6 +215,8 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
     }
 
     public void applyModifiers() {
+        if (mMediaPlayer == null) return;
+
         setResizeModeModifier(mResizeMode);
         setRepeatModifier(mRepeat);
         setPausedModifier(mPaused);
@@ -275,7 +276,7 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
 
     @Override
     public void onCompletion(MediaPlayer mp) {
-        //mMediaPlayerValid = false;
+        // mMediaPlayerValid = false;
         mEventEmitter.receiveEvent(getId(), Events.EVENT_END.toString(), null);
     }
 
@@ -283,11 +284,5 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
     protected void onDetachedFromWindow() {
         mMediaPlayerValid = false;
         super.onDetachedFromWindow();
-    }
-
-    @Override
-    protected void onAttachedToWindow() {
-        super.onAttachedToWindow();
-        setSrc(mSrcUriString, mSrcType, mSrcIsNetwork);
     }
 }
