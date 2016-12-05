@@ -69,6 +69,8 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
     private int mVideoDuration = 0;
     private int mVideoBufferedDuration = 0;
 
+    private boolean isAttachedToWindow = false;
+
     public ReactVideoView(ThemedReactContext themedReactContext) {
         super(themedReactContext);
 
@@ -96,8 +98,14 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
 
     private void initializeMediaPlayer() {
         if (mMediaPlayer != null) {
-            mMediaPlayer.stop();
-            mMediaPlayer.release();
+            final MediaPlayer mediaPlayer = mMediaPlayer;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    mediaPlayer.stop();
+                    mediaPlayer.release();
+                }
+            }).start();
         }
 
         mMediaPlayerValid = false;
@@ -115,10 +123,13 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
         mSrcType = type;
         mSrcIsNetwork = isNetwork;
 
+        if (!isAttachedToWindow) return;
+
         mMediaPlayerValid = false;
         mVideoDuration = 0;
         mVideoBufferedDuration = 0;
 
+        long start = System.currentTimeMillis();
         initializeMediaPlayer();
 
         if (uriString == null) return;
@@ -152,7 +163,6 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
             prepareAsync(this);
         } catch (java.lang.IllegalStateException e) {
             e.printStackTrace();
-            return;
         }
     }
 
@@ -288,12 +298,14 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
+        isAttachedToWindow = true;
         setSrc(mSrcUriString, mSrcType, mSrcIsNetwork);
     }
 
     @Override
     protected void onDetachedFromWindow() {
         mMediaPlayerValid = false;
+        isAttachedToWindow = false;
         super.onDetachedFromWindow();
     }
 }
