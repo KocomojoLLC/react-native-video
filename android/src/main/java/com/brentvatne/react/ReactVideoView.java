@@ -95,6 +95,11 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
     }
 
     private void initializeMediaPlayer() {
+        if (mMediaPlayer != null) {
+            mMediaPlayer.stop();
+            mMediaPlayer.release();
+        }
+
         mMediaPlayerValid = false;
         mMediaPlayer = new MediaPlayer();
         mMediaPlayer.setScreenOnWhilePlaying(true);
@@ -147,7 +152,7 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
             prepareAsync(this);
         } catch (java.lang.IllegalStateException e) {
             e.printStackTrace();
-          return;
+            return;
         }
     }
 
@@ -278,6 +283,12 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
     public void onCompletion(MediaPlayer mp) {
         // mMediaPlayerValid = false;
         mEventEmitter.receiveEvent(getId(), Events.EVENT_END.toString(), null);
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        setSrc(mSrcUriString, mSrcType, mSrcIsNetwork);
     }
 
     @Override
