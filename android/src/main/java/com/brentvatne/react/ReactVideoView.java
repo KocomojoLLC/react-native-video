@@ -129,7 +129,6 @@ public class ReactVideoView extends ScalableVideoView implements MediaPlayer.OnP
         mVideoDuration = 0;
         mVideoBufferedDuration = 0;
 
-        long start = System.currentTimeMillis();
         initializeMediaPlayer();
 
         if (uriString == null) return;
