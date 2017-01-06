@@ -1,3 +1,32 @@
+apply plugin: 'maven'
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:2.2.0'   
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter() 
+
+        maven { 
+            url 'https://raw.githubusercontent.com/KocomojoLLC/KocomojoSDK-Android/master'
+            credentials {
+                username "$mavenUser"
+                password "$mavenPassword"
+            }
+            authentication {
+                basic(BasicAuthentication)
+            }
+        }
+    }
+}
+
 apply plugin: 'com.android.library'
 
 android {
@@ -15,7 +44,19 @@ android {
     }
 }
 
+uploadArchives {
+    repositories.mavenDeployer {
+        def deployPath = file(getProperty('aar.deployPath'))
+        repository(url: "file://${deployPath.absolutePath}")
+        pom.project {
+            groupId 'com.brentvante.react'
+            artifactId 'react-native-video'
+            version "2.1.0"
+        }
+    }
+}
+
 dependencies {
-    compile 'com.facebook.react:react-native:0.19.+'
+    compile 'com.facebook.react:react-native:0.38.1'
     compile 'com.yqritc:android-scalablevideoview:1.0.1'
 }
